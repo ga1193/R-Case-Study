@@ -4,6 +4,7 @@ library(tidyverse)
 library(lubridate)
 library(ggplot2)
 library(stringr)
+library(chron)
 a22_05 = read.csv("Clean_Data/202205-divvy-tripdata.csv")
 a22_06 = read.csv("Clean_Data/202206-divvy-tripdata.csv")
 a22_07 = read.csv("Clean_Data/202207-divvy-tripdata.csv")
@@ -35,20 +36,40 @@ colnames(a23_03) == colnames(a23_04)
 # We get a 786,420 x 7 dataframe that contains bike rental data from May 2022 to April 2023
 # Everything except the day_of_week column is a character, will need to adjust columns to correct data types for analysis
 all_trips <- bind_rows(a22_05, a22_06 ,a22_07 ,a22_08 ,a22_09 ,a22_10 ,a22_11, a22_12, a23_01, a23_02, a23_03, a23_04)
-colnames(all_trips)
-dim(all_trips)
-str(all_trips)
+all_trips_v2 <- all_trips[!(all_trips$ride_length <= 0),]
+which(is.na(all_trips_v2$ride_length)) # check there are no NAs
+all_trips_v2$ride_length2 <- chron(times=all_trips_v2$ride_length) # this converts our ride_length data from character to time (numeric) so we can perform our calculations
+which(is.na(all_trips_v2)) #check there are no NAs after converting data type
+which(all_trips_v2$ride_length2 <= 0) # check if there are values less than or equal to 0
 
-#only two types of user (member or casual); three types of bikes (classic, docked, and electric)
+all_trips_v3 <- subset(all_trips_v2, all_trips_v2$ride_length2 > 0 )
+which(all_trips_32$ride_length2 <= 0) # check if there are values less than or equal to 0
+
+colnames(all_trips_v3)
+dim(all_trips_v3)
+str(all_trips_v3)
+
+
+# only two types of user (member or casual); three types of bikes (classic, docked, and electric)
+# there are several rows with negative values; we have to remove this 'bad data'
 unique(all_trips$member_casual)
 unique(all_trips$rideable_type)
 
 #Next, we're going to want to move create individual columns for day, month, year, etc. (need to split date and time column)
-all_trips[c('date', 'time')] <- str_split_fixed(all_trips$started_at, ' ', 2) # this separates date and time, now we can separate date
-all_trips$date <- as.Date(all_trips$date, "%m/%d/%y") #convert character string to date data type
-all_trips$month <- format(as.Date(all_trips$date), "%m")
-all_trips$day <- format(as.Date(all_trips$date), "%d")
-all_trips$year <- format(as.Date(all_trips$date), "%y")
+all_trips_v3[c('date', 'time')] <- str_split_fixed(all_trips_v3$started_at, ' ', 2) # this separates date and time, now we can separate date
+all_trips_v3$date <- as.Date(all_trips_v3$date, "%m/%d/%y") #convert character string to date data type
+all_trips_v3$month <- format(as.Date(all_trips_v3$date), "%m")
+all_trips_v3$day <- format(as.Date(all_trips_v3$date), "%d")
+all_trips_v3$year <- format(as.Date(all_trips_v3$date), "%y")
+str(all_trips_v3)
+
+# Now that our data is all clean and processed, we can start calculating our summary statistics
+summary(all_trips_v3$ride_length2) # avg ride time: 00:14:24, median 09:00, max- 23:58:07, min- 00:01
+
+aggregate(all_trips_v3$ride_length2 ~ all_trips_v3$member_casual, FUN = mean)
+aggregate(all_trips_v3$ride_length2 ~ all_trips_v3$member_casual, FUN = median)
+aggregate(all_trips_v3$ride_length2 ~ all_trips_v3$member_casual, FUN = max)
+aggregate(all_trips_v3$ride_length2 ~ all_trips_v3$member_casual, FUN = min)
 
 
 
