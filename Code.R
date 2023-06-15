@@ -113,6 +113,3 @@ all_trips_v3 %>%
   arrange(member_casual, day_of_week) %>% # gives us average duration of ride by day
   ggplot(aes(x = day_of_week, y = average_duration, fill = member_casual)) +
   geom_col(position = "dodge") # gives us a column chart separating the two member groups; remove dodge so they are in the same position
-
-
-
