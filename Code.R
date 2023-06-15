@@ -72,10 +72,47 @@ aggregate(all_trips_v3$ride_length2 ~ all_trips_v3$member_casual, FUN = min) # c
 
 which(all_trips_v3$ride_length2 == '00:00:01') # check where ride length is only 1 second
 
+all_trips_v3 <-  all_trips_v3 %>% 
+  mutate(day_of_week = recode(day_of_week
+                              , "1" = "Sunday"
+                              , "2" = "Monday"
+                              , "3" = "Tuesday"
+                              , "4" = "Wednesday"
+                              , "5" = "Thursday"
+                              , "6" = "Friday"
+                              , "7" = "Saturday"))
+# this will replace our numerical representations for day of week into the corresponding day, next we'll organize by day of the week
+
+all_trips_v3$day_of_week <- ordered(all_trips_v3$day_of_week, levels= c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
+# this will give me any resulting tables/plots/functions in the order listed above
+
 aggregate(all_trips_v3$ride_length2 ~ all_trips_v3$member_casual + all_trips_v3$day_of_week, FUN = mean)
 # gives us the average ride time by each day for members or casual riders
 
+# Now, we're going to analyze ridership data by type and weekday
+all_trips_v3 %>%
+  group_by(member_casual, day_of_week) %>%
+  summarize(number_of_rides= n() # gives total number of rides by day
+  ,average_duration = mean(ride_length2)) %>%
+  arrange(member_casual, day_of_week) # gives us average duration of ride by day
 
+# Next, we're going to visualize the number of rides by the rider type (casual or member)
+all_trips_v3 %>%
+  group_by(member_casual, day_of_week) %>%
+  summarize(number_of_rides= n() # gives total number of rides by day
+            ,average_duration = mean(ride_length2)) %>%
+  arrange(member_casual, day_of_week) %>% # gives us average duration of ride by day
+  ggplot(aes(x = day_of_week, y = number_of_rides, fill = member_casual)) +
+  geom_col(position = "dodge") # gives us a column chart separating the two member groups; remove dodge so they are in the same position
+
+# Next, we're going to visualize the average duration
+all_trips_v3 %>%
+  group_by(member_casual, day_of_week) %>%
+  summarize(number_of_rides= n() # gives total number of rides by day
+            ,average_duration = mean(ride_length2)) %>%
+  arrange(member_casual, day_of_week) %>% # gives us average duration of ride by day
+  ggplot(aes(x = day_of_week, y = average_duration, fill = member_casual)) +
+  geom_col(position = "dodge") # gives us a column chart separating the two member groups; remove dodge so they are in the same position
 
 
 
