@@ -40,20 +40,19 @@ all_trips_v2 <- all_trips[!(all_trips$ride_length <= 0),]
 which(is.na(all_trips_v2$ride_length)) # check there are no NAs
 all_trips_v2$ride_length2 <- chron(times=all_trips_v2$ride_length) # this converts our ride_length data from character to time (numeric) so we can perform our calculations
 which(is.na(all_trips_v2)) #check there are no NAs after converting data type
-which(all_trips_v2$ride_length2 <= 0) # check if there are values less than or equal to 0
+which(all_trips_v2$ride_length2 <= 0) # check if there are values less than or equal to 0; there are so we have to remove them
 
 all_trips_v3 <- subset(all_trips_v2, all_trips_v2$ride_length2 > 0 )
-which(all_trips_32$ride_length2 <= 0) # check if there are values less than or equal to 0
+which(all_trips_v3$ride_length2 <= 0) # check if there are values less than or equal to 0
 
 colnames(all_trips_v3)
-dim(all_trips_v3)
-str(all_trips_v3)
+dim(all_trips_v3) # dimension of data set: 786356 x 8
+str(all_trips_v3) # checks structure of the compiled data set
 
 
 # only two types of user (member or casual); three types of bikes (classic, docked, and electric)
-# there are several rows with negative values; we have to remove this 'bad data'
-unique(all_trips$member_casual)
-unique(all_trips$rideable_type)
+unique(all_trips_v3$member_casual)
+unique(all_trips_v3$rideable_type)
 
 #Next, we're going to want to move create individual columns for day, month, year, etc. (need to split date and time column)
 all_trips_v3[c('date', 'time')] <- str_split_fixed(all_trips_v3$started_at, ' ', 2) # this separates date and time, now we can separate date
@@ -63,13 +62,18 @@ all_trips_v3$day <- format(as.Date(all_trips_v3$date), "%d")
 all_trips_v3$year <- format(as.Date(all_trips_v3$date), "%y")
 str(all_trips_v3)
 
-# Now that our data is all clean and processed, we can start calculating our summary statistics
+# Now that our data is all clean and processed, we can start analyzing
 summary(all_trips_v3$ride_length2) # avg ride time: 00:14:24, median 09:00, max- 23:58:07, min- 00:01
 
-aggregate(all_trips_v3$ride_length2 ~ all_trips_v3$member_casual, FUN = mean)
-aggregate(all_trips_v3$ride_length2 ~ all_trips_v3$member_casual, FUN = median)
-aggregate(all_trips_v3$ride_length2 ~ all_trips_v3$member_casual, FUN = max)
-aggregate(all_trips_v3$ride_length2 ~ all_trips_v3$member_casual, FUN = min)
+aggregate(all_trips_v3$ride_length2 ~ all_trips_v3$member_casual, FUN = mean) # casual avg: 19:44, member avg: 11:31
+aggregate(all_trips_v3$ride_length2 ~ all_trips_v3$member_casual, FUN = median) # casual median: 11:08, member median: 08:07
+aggregate(all_trips_v3$ride_length2 ~ all_trips_v3$member_casual, FUN = max) # causal max: 23:58:07, member max: 23:43:47, this is okay bc of the day passes
+aggregate(all_trips_v3$ride_length2 ~ all_trips_v3$member_casual, FUN = min) # casual min: 00:01, member min: 00:01, wonder why these happen?
+
+which(all_trips_v3$ride_length2 == '00:00:01') # check where ride length is only 1 second
+
+aggregate(all_trips_v3$ride_length2 ~ all_trips_v3$member_casual + all_trips_v3$day_of_week, FUN = mean)
+# gives us the average ride time by each day for members or casual riders
 
 
 
